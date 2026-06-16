@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monuments — a blog you wander through</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1 L15 15 L1 15 Z' fill='%23e8654a'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<!-- Critical CSS: paints the pastel loader instantly so the page never flashes
+     the unstyled topbar / hint before the bundled stylesheet loads (FOUC). -->
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden;
+    font-family: "Hanken Grotesk", system-ui, sans-serif;
+    background: radial-gradient(120% 90% at 78% 8%, #fbe8cf 0%, rgba(251,232,207,0) 55%),
+      linear-gradient(176deg, #f6ddc6 0%, #f1d4ce 42%, #e7cdd9 74%, #ddc6dd 100%); }
+  canvas#scene { position: fixed; inset: 0; display: block; }
+  #loader { position: fixed; inset: 0; display: grid; place-items: center; z-index: 100;
+    background: linear-gradient(176deg, #f6ddc6 0%, #ecd0d4 60%, #ddc6dd 100%);
+    transition: opacity .9s ease; }
+  #loader.hidden { opacity: 0; pointer-events: none; }
+  #loader .mark { font-family: "Space Mono", ui-monospace, monospace; font-size: 11px;
+    letter-spacing: .42em; color: #9c8b93; text-transform: uppercase;
+    display: flex; align-items: center; gap: 13px; }
+  #loader .dot { width: 8px; height: 8px; border-radius: 50%; background: #e8654a; }
+  /* keep the reader / about / index overlays hidden until the full stylesheet
+     loads, so their pre-filled content can't flash as a stray "article" */
+  .reader, .index { visibility: hidden; }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<header class="topbar">
+  <div class="brand" id="brand">
+    <div class="name"><span class="glyph"></span><span data-site-name>Monuments</span></div>
+    <div class="tag" data-site-tagline></div>
+  </div>
+  <nav class="nav-right">
+    <button class="link-btn" id="aboutBtn">About</button>
+  </nav>
+</header>
+
+<div class="hint" id="hint">
+  <span class="key">scroll</span> to wander
+  <span class="sep">·</span>
+  <span class="key">drag</span> to turn the world
+  <span class="sep">·</span>
+  click a monument to read
+</div>
+
+<div class="rail">
+  <span class="label" id="railLabel">01 / 09</span>
+  <div class="dots" id="dots"></div>
+</div>
+
+<!-- reading overlay -->
+<div class="reader" id="reader">
+  <div class="scrim" id="scrim"></div>
+  <article class="panel">
+    <button class="close" id="readerClose" aria-label="Close">✕</button>
+    <div class="inner" id="readerInner"></div>
+  </article>
+</div>
+
+<!-- about overlay -->
+<div class="reader about" id="about">
+  <div class="scrim" id="aboutScrim"></div>
+  <article class="panel">
+    <button class="close" id="aboutClose" aria-label="Close">✕</button>
+    <div class="inner" id="aboutInner"></div>
+  </article>
+</div>
+
+<div id="loader"><div class="mark"><span class="dot"></span> raising the monuments</div></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+node_modules
+dist
+*.local
+.DS_Store
+
+# stray screenshots / scratch
+/image.png
+/.shot.png
+*.tmp-shot.png

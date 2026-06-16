@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monuments — a blog you wander through</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<header class="topbar">
+  <div class="brand" id="brand">
+    <div class="name"><span class="glyph"></span>Monuments</div>
+    <div class="tag">A quiet skyline of essays,<br />photographs, notes &amp; projects.</div>
+  </div>
+  <nav class="nav-right">
+    <button class="link-btn" id="aboutBtn">About</button>
+  </nav>
+</header>
+
+<div class="hint" id="hint">
+  <span class="key">scroll</span> to wander
+  <span class="sep">·</span>
+  <span class="key">drag</span> to turn the world
+  <span class="sep">·</span>
+  click a monument to read
+</div>
+
+<div class="rail">
+  <span class="label" id="railLabel">01 / 09</span>
+  <div class="dots" id="dots"></div>
+</div>
+
+<!-- reading overlay -->
+<div class="reader" id="reader">
+  <div class="scrim" id="scrim"></div>
+  <article class="panel">
+    <button class="close" id="readerClose" aria-label="Close">✕</button>
+    <div class="inner" id="readerInner"></div>
+  </article>
+</div>
+
+<!-- about overlay -->
+<div class="reader about" id="about">
+  <div class="scrim" id="aboutScrim"></div>
+  <article class="panel">
+    <button class="close" id="aboutClose" aria-label="Close">✕</button>
+    <div class="inner" id="aboutInner"></div>
+  </article>
+</div>
+
+<div id="loader"><div class="mark"><span class="dot"></span> raising the monuments</div></div>
+
+<template id="__bundler_thumbnail" data-bg-color="#efd6d2">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#efd6d2"/>
+    <path d="M600 250 L630 305 L570 305 Z" fill="#e8654a"/>
+    <g>
+      <polygon points="600,330 740,400 600,470 460,400" fill="#e8927c"/>
+      <polygon points="460,400 600,470 600,520 460,450" fill="#cf7e63"/>
+      <polygon points="740,400 600,470 600,520 740,450" fill="#d98e73"/>
+      <polygon points="600,400 700,448 600,496 500,448" fill="#eaa78f"/>
+      <polygon points="500,448 600,496 600,532 500,484" fill="#c9745c"/>
+      <polygon points="700,448 600,496 600,532 700,484" fill="#d98e73"/>
+      <polygon points="600,520 760,600 600,680 440,600" fill="#efc7b6"/>
+      <polygon points="440,600 600,680 600,720 440,640" fill="#d9a890"/>
+      <polygon points="760,600 600,680 600,720 760,640" fill="#e3b59f"/>
+    </g>
+  </svg>
+</template>
+
+<!-- fully local: three.js (UMD global) + app + vanilla tweaks -->
+<script src="three.min.js"></script>
+<script src="blog-data.js"></script>
+<script src="app.offline.js"></script>
+<script src="tweaks-vanilla.js"></script>
+</body>
+</html>

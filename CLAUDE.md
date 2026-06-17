@@ -38,6 +38,7 @@ npm run preview   # 预览 dist 产物
 - 测试内容:`scripts/gen-sample-content.mjs [n]` 生成每类 n 篇 `gen-*.md` filler(保留 curated)。
 - **引擎是导航状态唯一真相**,不触碰业务 DOM(仅 canvas、body 背景、loader)。
 - 共享:`builders.ts`(建模器+`beaconGeo`)、`geometry.ts`、`skies.ts`(CSS 背景+光照+`makeSkyTexture` 场景内天空)、`atmosphere.ts`(云鸟)、`starfield.ts`(暖色浮尘 + `dotTexture`/`ringTexture`,三种布局共用)、`cellMonument.ts`(纪念碑材质带菲涅尔边光)。
+- 荒岛**流动昼夜**(仅 islands):`dayCycle`(Tweaks,默认开)开时,`cycleSky` 每帧在 `DAY_CYCLE` 四种天色间循环插值(场景内天空 `paintSky` 重绘同一 CanvasTexture + 光照色 + 太阳弧线/强度),关时才用 Tweaks 选定的静态天空。`DAY_PERIOD` 控制周期。
 - 荒岛**电影感后期**(仅 islands):`EffectComposer`(多重采样+半精度全分辨率目标,否则发糊)= RenderPass → `BokehPass`(总览近全清晰、飞入某岛光圈渐开做 rack-focus)→ `UnrealBloomPass`(信标 emissive 提到 1.4 越过阈值发光晕开)→ `OutputPass`。需要不透明场景内天空(`scene.background`)才能正确合成。另有 `Reflector` 云海雾基、聚焦光环/点击涟漪(ring sprite)、过滤时同类岛**星座连线**(`LineSegments`,连最近 2 邻)。
 - 共同细节:三种布局都有浮尘 + 极缓自转/漂移;魔方点格子时纪念碑用 `easeOutBack` 升起并转正、信标中途闪一下;天际线长街区支持 `Home/End/PgUp/PgDn` 快速跳转。
 

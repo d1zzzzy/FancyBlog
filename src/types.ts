@@ -65,4 +65,6 @@ export interface Tweaks {
   float: number;
   autoRotate: boolean;
   labels: boolean;
+  /** slowly cycle the sky/light through the themes (islands layout) */
+  dayCycle: boolean;
 }

@@ -13,6 +13,7 @@ const DEFAULTS: Tweaks = {
   float: 1,
   autoRotate: false,
   labels: true,
+  dayCycle: true,
 };
 
 export interface TweaksPanelOptions {
@@ -150,6 +151,7 @@ export function createTweaksPanel(opts: TweaksPanelOptions): void {
 
   addSection("Atmosphere");
   addSegment("Sky", "sky", opts.skies);
+  addToggle("Day cycle", "dayCycle");
   addSlider("Sun angle", "sunAngle", -1.2, 1.2, 0.05, "");
   addSection("Motion");
   addSlider("Float", "float", 0, 2, 0.1, "×");

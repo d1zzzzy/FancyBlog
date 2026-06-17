@@ -7,7 +7,7 @@ import {
   cellPlinthGeometry,
   plinthMaterial,
 } from "./cellMonument";
-import { SKIES, makeSkyTexture } from "./skies";
+import { SKIES } from "./skies";
 import { createAtmosphere, type Atmosphere } from "./atmosphere";
 import { createStarfield, dotTexture, ringTexture, type Starfield } from "./starfield";
 import { scatter } from "./scatter";
@@ -81,6 +81,8 @@ const FLOOR_Y = -BOX * 0.5 + 0.4;
 const BEACON_Y = Math.min(BOX * 0.5 - 0.5, FLOOR_Y + FIT + 0.3);
 const EL_MIN = -0.5; // elevation (pitch) soft limits
 const EL_MAX = 1.35;
+const DAY_CYCLE = ["Slate Dawn", "Mint Morning", "Peach Dusk", "Lavender Haze"]; // dawn → day → dusk → night
+const DAY_PERIOD = 180; // seconds for one full loop through the themes
 
 export class MonumentIslands {
   readonly islands: Island[] = [];
@@ -153,7 +155,15 @@ export class MonumentIslands {
   private composer!: EffectComposer;
   private bloomPass!: UnrealBloomPass;
   private bokehPass!: BokehPass;
-  private skyTex?: THREE.CanvasTexture;
+
+  /* sky (repaintable for the day cycle) */
+  private skyCanvas!: HTMLCanvasElement;
+  private skyCtx!: CanvasRenderingContext2D;
+  private skyTex!: THREE.CanvasTexture;
+  private dayCycle = true;
+  private dayT = 0; // position through the sky sequence (units = sky index)
+  private readonly _ca = new THREE.Color();
+  private readonly _cb = new THREE.Color();
 
   private readonly frameListeners: Array<() => void> = [];
 
@@ -171,8 +181,14 @@ export class MonumentIslands {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    // opaque in-scene sky so bloom / DOF composite over a real background
-    this.skyTex = makeSkyTexture(SKIES["Peach Dusk"].bg);
+    // opaque in-scene sky (repaintable) so bloom / DOF composite over a real bg
+    this.skyCanvas = document.createElement("canvas");
+    this.skyCanvas.width = 4;
+    this.skyCanvas.height = 256;
+    this.skyCtx = this.skyCanvas.getContext("2d")!;
+    this.skyTex = new THREE.CanvasTexture(this.skyCanvas);
+    this.skyTex.colorSpace = THREE.SRGBColorSpace;
+    this.paintSky(SKIES["Peach Dusk"].bg);
     this.scene.background = this.skyTex;
 
     this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 4000);
@@ -211,6 +227,42 @@ export class MonumentIslands {
     this.bindEvents();
     this.emitState();
     this.frame();
+  }
+
+  /* ---------- sky + day cycle ---------- */
+  private paintSky(stops: number[]): void {
+    const h = this.skyCanvas.height;
+    const g = this.skyCtx.createLinearGradient(0, 0, 0, h);
+    stops.forEach((hex, i) =>
+      g.addColorStop(i / (stops.length - 1), `#${(hex >>> 0).toString(16).padStart(6, "0")}`),
+    );
+    this.skyCtx.fillStyle = g;
+    this.skyCtx.fillRect(0, 0, this.skyCanvas.width, h);
+    this.skyTex.needsUpdate = true;
+  }
+
+  private lerpHex(a: number, b: number, f: number): number {
+    return this._ca.setHex(a).lerp(this._cb.setHex(b), f).getHex();
+  }
+
+  /** Slowly drift the sky, light colour + sun arc through the themes. */
+  private cycleSky(dt: number): void {
+    const seq = DAY_CYCLE;
+    this.dayT = (this.dayT + (dt * seq.length) / DAY_PERIOD) % seq.length;
+    const i = Math.floor(this.dayT);
+    const f = this.dayT - i;
+    const a = SKIES[seq[i]];
+    const b = SKIES[seq[(i + 1) % seq.length]];
+
+    this.paintSky(a.bg.map((s, k) => this.lerpHex(s, b.bg[k], f)));
+    this.hemi.color.setHex(this.lerpHex(a.hemiSky, b.hemiSky, f));
+    this.hemi.groundColor.setHex(this.lerpHex(a.hemiGround, b.hemiGround, f));
+    this.sun.color.setHex(this.lerpHex(a.sun, b.sun, f));
+
+    // sun swings across the sky + dips toward the "night" themes
+    const ang = (this.dayT / seq.length) * Math.PI * 2;
+    this.sunAngle = Math.sin(ang) * 0.9;
+    this.sun.intensity = 1.15 + Math.cos(ang) * 0.25;
   }
 
   /* ---------- post-processing pipeline ---------- */
@@ -449,20 +501,21 @@ export class MonumentIslands {
   }
 
   applyTweaks(tw: Partial<Tweaks>): void {
-    if (tw.sky && SKIES[tw.sky]) {
+    if (typeof tw.dayCycle === "boolean") this.dayCycle = tw.dayCycle;
+    // a static sky only applies when the day cycle is off (otherwise it drives it)
+    if (!this.dayCycle && tw.sky && SKIES[tw.sky]) {
       const s = SKIES[tw.sky];
       document.body.style.background = s.body;
       document.documentElement.style.background = s.body;
       this.hemi.color.setHex(s.hemiSky);
       this.hemi.groundColor.setHex(s.hemiGround);
       this.sun.color.setHex(s.sun);
+      this.sun.intensity = 1.35;
       const l = document.getElementById("loader");
       if (l) l.style.background = s.body;
-      this.skyTex?.dispose();
-      this.skyTex = makeSkyTexture(s.bg);
-      this.scene.background = this.skyTex;
+      this.paintSky(s.bg);
     }
-    if (typeof tw.sunAngle === "number") this.sunAngle = tw.sunAngle;
+    if (!this.dayCycle && typeof tw.sunAngle === "number") this.sunAngle = tw.sunAngle;
     if (typeof tw.float === "number") this.floatAmp = tw.float;
     if (typeof tw.autoRotate === "boolean") this.autoRotate = tw.autoRotate;
   }
@@ -631,6 +684,7 @@ export class MonumentIslands {
     else if (this.targetDistance > dMax) this.targetDistance += (dMax - this.targetDistance) * 0.25;
 
     this.starfield?.update(dt, t);
+    if (this.dayCycle) this.cycleSky(dt);
 
     if (this.focused) {
       const fd = BOX * 2.3 * this.focused.scale;
